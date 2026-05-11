@@ -7,8 +7,8 @@ from __future__ import annotations
 import time
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, HTTPException
-from fastapi.responses import Response
+from fastapi import FastAPI
+from fastapi.responses import JSONResponse, Response
 from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 from pydantic import BaseModel
 
@@ -66,14 +66,21 @@ def metrics() -> Response:
 def predict(req: PredictRequest) -> PredictResponse:
     INFERENCE_ACTIVE.inc()
     start = time.perf_counter()
-    span = tracer.start_span("predict")
-    span.set_attribute("gen_ai.request.model", req.model)
 
-    try:
+    # Use start_as_current_span so it inherits the auto-instrumented context
+    # and all child spans share the same trace_id visible in Jaeger.
+    with tracer.start_as_current_span("predict") as span:
+        span.set_attribute("gen_ai.request.model", req.model)
+        trace_id = format(span.get_span_context().trace_id, "032x")
+
         if req.fail:
             INFERENCE_REQUESTS.labels(model=req.model, status="error").inc()
-            log.error("forced failure", model=req.model)
-            raise HTTPException(status_code=503, detail="forced failure (alert demo)")
+            log.error("forced failure", model=req.model, trace_id=trace_id)
+            INFERENCE_ACTIVE.dec()
+            return JSONResponse(
+                status_code=503,
+                content={"detail": "forced failure (alert demo)", "trace_id": trace_id},
+            )
 
         with tracer.start_as_current_span("embed-text") as s:
             s.set_attribute("text.length", len(req.prompt))
@@ -97,7 +104,6 @@ def predict(req: PredictRequest) -> PredictResponse:
         elapsed = time.perf_counter() - start
         INFERENCE_LATENCY.labels(model=req.model).observe(elapsed)
 
-        trace_id = format(span.get_span_context().trace_id, "032x")
         log.info(
             "prediction served",
             model=req.model,
@@ -107,6 +113,7 @@ def predict(req: PredictRequest) -> PredictResponse:
             duration_seconds=round(elapsed, 4),
             trace_id=trace_id,
         )
+        INFERENCE_ACTIVE.dec()
         return PredictResponse(
             text=text,
             model=req.model,
@@ -115,6 +122,3 @@ def predict(req: PredictRequest) -> PredictResponse:
             trace_id=trace_id,
             quality_score=quality,
         )
-    finally:
-        INFERENCE_ACTIVE.dec()
-        span.end()

@@ -1,0 +1,23 @@
+## Pyroscope continuous profiling for the inference service (Bonus B1)
+## Start: docker compose -f BONUS-ebpf-profiling/docker-compose.pyroscope.yml up -d
+## UI:    http://localhost:4040
+##
+## Platform note:
+##   - Linux / WSL2: eBPF auto-instrumentation works natively
+##   - macOS: uses Python SDK push-mode (pyroscope-io package)
+##     The pyroscope-app.py wrapper pushes profiles to this server.
+
+services:
+  pyroscope:
+    image: grafana/pyroscope:1.7.0
+    container_name: day23-pyroscope
+    ports:
+      - "127.0.0.1:4040:4040"
+    command:
+      - "-config.expand-env=true"
+      - "-storage.retention=24h"
+    volumes:
+      - pyroscope-data:/var/lib/pyroscope
+
+volumes:
+  pyroscope-data:

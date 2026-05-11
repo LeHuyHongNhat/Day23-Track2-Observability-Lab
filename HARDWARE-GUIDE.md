@@ -1,6 +1,6 @@
 # Hardware Guide — Day 23 Lab
 
-The lab runs **7 containers** simultaneously. Most laptops can handle it, but pre-flight checks save a lot of "why isn't anything working" debugging.
+The lab runs **8 containers** simultaneously. Most laptops can handle it, but pre-flight checks save a lot of "why isn't anything working" debugging.
 
 ## Minimum requirements
 
@@ -49,7 +49,8 @@ Approximate steady-state per service (after `make up`, no load):
 | loki                     | 150 MB | 1% |
 | jaeger                   | 200 MB | <1% |
 | otel-collector           | 100 MB | 1% |
-| **Total steady-state**   | **~1 GB** | **~5-10%** of one core |
+| promtail                 | 80 MB  | <1% |
+| **Total steady-state**   | **~1.1 GB** | **~5-10%** of one core |
 
 Under `make load` (10 concurrent users):
 

@@ -1,0 +1,32 @@
+[
+    {
+        "annotations": {
+            "description": "Prometheus has been unable to scrape inference-api for 1 minute.",
+            "summary": "inference-api is down"
+        },
+        "endsAt": "2026-05-11T05:39:52.568Z",
+        "fingerprint": "c6170d595ea16620",
+        "receivers": [
+            {
+                "name": "slack-critical"
+            }
+        ],
+        "startsAt": "2026-05-11T05:35:52.568Z",
+        "status": {
+            "inhibitedBy": [],
+            "silencedBy": [],
+            "state": "active"
+        },
+        "updatedAt": "2026-05-11T05:35:52.606Z",
+        "generatorURL": "http://b6f1374128a4:9090/graph?g0.expr=up%7Bjob%3D%22inference-api%22%7D+%3D%3D+0&g0.tab=1",
+        "labels": {
+            "alertname": "ServiceDown",
+            "cluster": "aicb-day23-lab",
+            "env": "lab",
+            "instance": "app:8000",
+            "job": "inference-api",
+            "service": "inference-api",
+            "severity": "critical"
+        }
+    }
+]

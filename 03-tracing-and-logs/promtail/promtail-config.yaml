@@ -1,0 +1,50 @@
+## Promtail — ships day23-app structured JSON logs to Loki
+## Reads from a shared Docker volume (cross-platform: works on macOS, Linux, WSL2).
+
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+positions:
+  filename: /tmp/promtail-positions.yaml
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+
+scrape_configs:
+  - job_name: day23-app-logs
+    static_configs:
+      - targets: [localhost]
+        labels:
+          job: inference-api
+          service: day23-app
+          __path__: /var/log/app/app.log
+
+    pipeline_stages:
+      # Parse structlog JSON output
+      - json:
+          expressions:
+            timestamp: timestamp
+            level: level
+            event: event
+            trace_id: trace_id
+            model: model
+            duration_seconds: duration_seconds
+            input_tokens: input_tokens
+            output_tokens: output_tokens
+            quality: quality
+
+      # Parse ISO8601 timestamp from structlog
+      - timestamp:
+          source: timestamp
+          format: RFC3339
+
+      # Promote to Loki labels (low-cardinality only — cardinality warning!)
+      - labels:
+          level: ""
+          event: ""
+
+      # Extract trace_id as structured metadata for Grafana derived-field link
+      - structured_metadata:
+          trace_id: ""
+          model: ""

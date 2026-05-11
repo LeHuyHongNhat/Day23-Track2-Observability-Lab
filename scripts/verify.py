@@ -55,13 +55,13 @@ def main() -> int:
 
     # 02-prometheus-grafana
     results.append(check("02: Prometheus reachable", http_ok("http://localhost:9090/-/healthy")))
-    results.append(check("02: Grafana reachable", http_ok("http://localhost:3000/api/health")))
+    results.append(check("02: Grafana reachable", http_ok("http://127.0.0.1:3000/api/health")))
     results.append(check("02: Alertmanager reachable", http_ok("http://localhost:9093/-/healthy")))
 
     # Verify dashboards loaded (Grafana API)
     try:
         r = requests.get(
-            "http://localhost:3000/api/search?query=Day%2023",
+            "http://127.0.0.1:3000/api/search?query=Day%2023",
             auth=("admin", "admin"),
             timeout=3,
         )
@@ -74,11 +74,26 @@ def main() -> int:
         dash_count >= 3,
         f"found={dash_count}",
     ))
+    # Verify cross-day dashboard exists
+    try:
+        r_cross = requests.get(
+            "http://127.0.0.1:3000/api/search?query=Cross-Day",
+            auth=("admin", "admin"),
+            timeout=3,
+        )
+        cross_day_found = len(r_cross.json()) >= 1 if r_cross.status_code == 200 else False
+    except Exception:
+        cross_day_found = False
+    results.append(check(
+        "05: Cross-day dashboard loaded",
+        cross_day_found,
+    ))
 
     # 03-tracing-and-logs
     results.append(check("03: Jaeger UI reachable", http_ok("http://localhost:16686/")))
     results.append(check("03: Loki ready", http_ok("http://localhost:3100/ready")))
     results.append(check("03: OTel Collector self-metrics reachable", http_ok("http://localhost:8888/metrics")))
+    results.append(check("03: Promtail reachable", http_ok("http://localhost:9080/ready")))
 
     # 04-drift-detection
     drift_summary = LAB / "04-drift-detection" / "reports" / "drift-summary.json"

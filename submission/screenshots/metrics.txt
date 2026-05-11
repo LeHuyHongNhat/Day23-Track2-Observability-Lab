@@ -1,0 +1,2 @@
+inference_active_gauge 0.0
+gpu_utilization_percent 34.782069804682116

@@ -9,6 +9,7 @@ IMAGES=(
   "prom/alertmanager:v0.27.0"
   "grafana/grafana:11.3.0"
   "grafana/loki:3.3.0"
+  "grafana/promtail:3.3.0"
   "jaegertracing/all-in-one:1.62.0"
   "otel/opentelemetry-collector-contrib:0.114.0"
 )

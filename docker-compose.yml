@@ -1,5 +1,5 @@
 ## Day 23 Track 2 — Full observability stack
-## 7 services. Anchors deck §10 demo + lab tracks 01-05.
+## 8 services (7 core + promtail). Anchors deck §10 demo + lab tracks 01-05.
 ## All ports bound to localhost only — no public exposure.
 
 services:
@@ -18,6 +18,8 @@ services:
     depends_on:
       otel-collector:
         condition: service_started
+    volumes:
+      - app-logs:/var/log/app
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://localhost:8000/healthz"]
       interval: 5s
@@ -54,8 +56,13 @@ services:
       - "127.0.0.1:9093:9093"
     volumes:
       - ./02-prometheus-grafana/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - ./02-prometheus-grafana/alertmanager/entrypoint.sh:/entrypoint.sh:ro
     environment:
       SLACK_WEBHOOK_URL: ${SLACK_WEBHOOK_URL:-https://hooks.slack.com/services/REPLACE/ME}
+    entrypoint: ["/bin/sh", "/entrypoint.sh"]
+    command:
+      - --config.file=/etc/alertmanager/alertmanager.yml
+      - --storage.path=/alertmanager
     networks: [obs]
 
   grafana:
@@ -89,6 +96,19 @@ services:
     command: -config.file=/etc/loki/local-config.yaml
     networks: [obs]
 
+  promtail:
+    image: grafana/promtail:3.3.0
+    container_name: day23-promtail
+    ports:
+      - "127.0.0.1:9080:9080"
+    volumes:
+      - ./03-tracing-and-logs/promtail/promtail-config.yaml:/etc/promtail/config.yaml:ro
+      - app-logs:/var/log/app:ro
+    command: -config.file=/etc/promtail/config.yaml
+    depends_on:
+      - loki
+    networks: [obs]
+
   jaeger:
     image: jaegertracing/all-in-one:1.62.0
     container_name: day23-jaeger
@@ -116,6 +136,7 @@ services:
 volumes:
   prom-data:
   grafana-data:
+  app-logs:
 
 networks:
   obs:

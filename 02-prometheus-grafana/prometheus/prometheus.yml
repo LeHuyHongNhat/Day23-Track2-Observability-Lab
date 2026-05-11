@@ -27,15 +27,44 @@ scrape_configs:
     static_configs:
       - targets: ['otel-collector:8888']
 
-  # Day 19 vector-store integration (optional, see §05)
-  # Uncomment + set DAY19_QDRANT_URL in .env
-  # - job_name: 'day19-qdrant'
-  #   static_configs:
-  #     - targets: ['host.docker.internal:6333']
-  #   metrics_path: /metrics
+  # Day 19 vector-store integration — stub emitter on host port 9101
+  # Start with: python3 05-integration/monitor-day19-vector-store.py &
+  - job_name: 'day19-qdrant'
+    static_configs:
+      - targets: ['host.docker.internal:9101']
+    metrics_path: /metrics
 
-  # Day 20 model-serving integration (optional, see §05)
-  # - job_name: 'day20-llamacpp'
-  #   static_configs:
-  #     - targets: ['host.docker.internal:8080']
-  #   metrics_path: /metrics
+  # Day 20 model-serving integration — stub emitter on host port 9102
+  # Start with: python3 05-integration/monitor-day20-llama-cpp.py &
+  - job_name: 'day20-llamacpp'
+    static_configs:
+      - targets: ['host.docker.internal:9102']
+    metrics_path: /metrics
+
+  # Day 16 cloud infra integration — stub emitter on host port 9103
+  # Start with: python3 05-integration/monitor-day16-cloud.py &
+  - job_name: 'day16-node-exporter'
+    static_configs:
+      - targets: ['host.docker.internal:9103']
+    metrics_path: /metrics
+
+  # Day 17 data pipeline integration — stub emitter on host port 9104
+  # Start with: python3 05-integration/monitor-day17-pipeline.py &
+  - job_name: 'day17-airflow'
+    static_configs:
+      - targets: ['host.docker.internal:9104']
+    metrics_path: /metrics
+
+  # Day 18 lakehouse integration — stub emitter on host port 9105
+  # Start with: python3 05-integration/monitor-day18-lakehouse.py &
+  - job_name: 'day18-spark'
+    static_configs:
+      - targets: ['host.docker.internal:9105']
+    metrics_path: /metrics
+
+  # Day 22 alignment/eval integration — stub emitter on host port 9106
+  # Start with: python3 05-integration/monitor-day22-alignment.py &
+  - job_name: 'day22-dpo'
+    static_configs:
+      - targets: ['host.docker.internal:9106']
+    metrics_path: /metrics
